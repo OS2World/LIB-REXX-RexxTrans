@@ -1,0 +1,22 @@
+                        Installation for Rexx/Trans
+
+This file explains how to install Rexx/Trans on your system.
+
+Generally, Rexx/Trans is included with Rexx applications, and the
+installation of Rexx/Trans is handled by the application's installation
+procedure.
+
+Installation from source.
+------------------------
+- Unpack the Rexx/Trans distribution.
+- On Unix platforms, and BeOS, Rexx/Trans comes with a configuration
+  script which determines the capabilities of the complier and platform
+  and builds the Rexx/Trans shared library using those determined features.
+  Simply run the "configure" script in the Rexx/Trans directory. This will
+  create a Makefile, which is used to build the shared library. 
+- Build the Rexx/Trans library. If you ran the "configure" script above, 
+  simply type "make". On OS/2 and Win32, you will need to know the name of
+  the "make" program that comes with your compiler. It will be "make" or
+  "nmake". There are specific "makefiles" for OS/2 and Win32. Choose the
+  correct one and enter a command like: nmake -f makefile.win32.vc
+- ...

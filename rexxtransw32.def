@@ -1,0 +1,37 @@
+;
+; rexxtrans32.def
+;
+LIBRARY rexxtrans INITINSTANCE
+HEAPSIZE 40960
+STACKSIZE 10240
+EXPORTS RexxStart
+EXPORTS RexxRegisterExitExe
+EXPORTS RexxRegisterExitDll
+EXPORTS RexxDeregisterExit
+EXPORTS RexxQueryExit
+EXPORTS RexxRegisterSubcomExe
+EXPORTS RexxDeregisterSubcom
+EXPORTS RexxRegisterSubcomDll
+EXPORTS RexxQuerySubcom
+EXPORTS RexxRegisterFunctionExe
+EXPORTS RexxRegisterFunctionDll
+EXPORTS RexxDeregisterFunction
+EXPORTS RexxQueryFunction
+EXPORTS RexxVariablePool
+EXPORTS RexxAllocateMemory
+EXPORTS RexxFreeMemory
+EXPORTS RexxCreateQueue
+EXPORTS RexxDeleteQueue
+EXPORTS RexxQueryQueue
+EXPORTS RexxAddQueue
+EXPORTS RexxPullQueue
+EXPORTS RexxAddMacro
+EXPORTS RexxDropMacro
+EXPORTS RexxSaveMacroSpace
+EXPORTS RexxLoadMacroSpace
+EXPORTS RexxQueryMacro
+EXPORTS RexxReorderMacro
+EXPORTS RexxClearMacroSpace
+EXPORTS RexxSetHalt
+EXPORTS RexxWaitForTermination
+EXPORTS RexxDidRexxTerminate

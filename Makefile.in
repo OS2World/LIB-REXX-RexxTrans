@@ -1,0 +1,226 @@
+#
+# Makefile for Rexx/Trans Extension
+#
+# The variable 'srcdir' refers to the source-distribution, and can be set with
+# the configure script by "--srcdir=DIR".
+#
+
+SHELL		= /bin/sh
+THIS		= Makefile
+
+@SET_MAKE@
+
+ABI_MAJOR=1
+ABI_MINOR=6
+ABI=$(ABI_MAJOR).$(ABI_MINOR)
+
+VER=@VER@
+VER_DOT=@VER_DOT@
+VER_DATE=@VER_DATE@
+PACKAGE_DIR=RexxTrans-$(VER_DOT)
+PACKAGE_NAME=rexxtrans
+
+srcdir		= @srcdir@
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+libdir  = @libdir@
+bindir  = @bindir@
+includedir  = @includedir@
+docdir		= $(srcdir)/doc
+thisdir		=@thisdir@
+target = @target@
+
+INSTALL		= $(srcdir)/install-sh
+
+CC		= @CC@
+CFLAGS		= @CFLAGS@
+LN_S  = @LN_S@
+
+OSAVE  =           @OSAVE@
+OBJ  =             @OBJ@
+EXE  =             @EXE@
+SHLPRE =           @SHLPRE@
+SHLPST =           @SHLPST@
+LIBPRE =           @LIBPRE@
+LIBPST =           @LIBPST@
+GETOPT  =          @GETOPT@
+DYN_COMP  =        @DYN_COMP@
+SYS_DEFS  =        @DLFCNINCDIR@ @SYS_DEFS@ -DREXXTRANS_VERSION=\"$(VER_DOT)\" -DREXXTRANS_DATE=\"$(VER_DATE)\" -DSHLPRE=\"@SHLPRE@\" -DSHLPST=\"@SHLPST@\"
+LD_RXLIB1  =       @LD_RXTRANSLIB1@ @DLFCNLIBDIR@
+LD_RXLIB2  =       @MH_EXTRA_LIBS@
+DYNAMIC_LDFLAGS =  @DYNAMIC_LDFLAGS@
+SHL_TARGETS =      @SHL_TARGETS@
+OTHER_INSTALLS =   @OTHER_INSTALLS@
+BASE_INSTALL =     @BASE_INSTALL@
+BASE_BINARY =      @BASE_BINARY@
+CAN_USE_ABI =      @CAN_USE_ABI@
+O2SAVE  =          @O2SAVE@
+O2SHO  =           @O2SHO@
+CC2O   =           @CC2O@
+SAVE2O  =          @SAVE2O@
+PURIFY =           @PURIFY@
+RXPACKEXPORTS =    @RXPACKEXPORTS@
+RXPACKEXP =        @RXPACKEXP@
+
+INCDIR		= $(srcdir)
+CPPFLAGS	= -I. -I$(INCDIR) @DEFS@ $(SYS_DEFS)
+
+CCFLAGS		= -c $(CFLAGS) $(CPPFLAGS)
+
+LINK		= @PURIFY@ $(CC)
+LDFLAGS		= @MYLDFLAGS@
+
+################################################################################
+
+H1=$(srcdir)/rexxtrans.h config.h
+
+################################################################################
+all:	$(SHL_TARGETS)
+
+distclean: clean
+	-rm -f Makefile config.h
+
+mostlyclean: clean
+
+realclean: distclean
+
+#------------------------------------------------------------------------
+
+CSRCFILES = rexxtrans.c
+DISTCFILES = $(PACKAGE_DIR)/rexxtrans.c
+
+HEADERS = rexxtrans.h common/defines.h
+DISTHEADERS = $(PACKAGE_DIR)/rexxtrans.h $(PACKAGE_DIR)/common/defines.h
+
+OFILES = rexxtrans.o
+
+JUNK = $(OFILES) $(SHL_TARGETS)
+
+$(SHLPRE)$(PACKAGE_NAME)$(SHLPST): $(OFILES) $(RXPACKEXP)
+	$(LD_RXLIB1) $(RXPACKEXPORTS) -o $@ $(OFILES) $(LD_RXLIB2)
+
+$(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI): $(OFILES) $(RXPACKEXP)
+	$(LD_RXLIB1) $(RXPACKEXPORTS) -o $@ $(OFILES) $(LD_RXLIB2)
+	-rm -f $(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI_MAJOR)
+	-$(LN_S) $(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI) $(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI_MAJOR)
+	-rm -f $(SHLPRE)$(PACKAGE_NAME)$(SHLPST)
+	-$(LN_S) $(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI) $(SHLPRE)$(PACKAGE_NAME)$(SHLPST)
+
+#
+# Special rule for Mac OSX "bundle".
+#
+$(SHLPRE)$(PACKAGE_NAME)$(BUNDLE): $(OFILES)
+	$(CC) -bundle -flat_namespace -undefined suppress -o $@ $(OFILES) -lc $(SHLIBS)
+
+#
+# shared library objects
+#
+rexxtrans.o : $(srcdir)/rexxtrans.c $(H1)
+	$(CC) $(CCFLAGS) $(CC2O) $(DYN_COMP) $(srcdir)/rexxtrans.c
+
+#
+# export file for AIX
+#
+$(PACKAGE_NAME).exp: $(srcdir)/rexxtransw32.def $(srcdir)/def2exp.rexx
+	rexx $(srcdir)/def2exp.rexx $(srcdir)/rexxtransw32.def $(PACKAGE_NAME).exp
+
+
+zip:
+	zip rxtrans$(VER) README INSTALL TODO COPYING-LIB HISTORY $(CSRCFILES) $(HEADERS)
+	zip rxtrans$(VER) Makefile.in configure config.h.in 
+	zip rxtrans$(VER) makefile.* *.def *.ico *.rc 
+	zip rxtrans$(VER) config.guess config.sub install-sh
+	zip rxtrans$(VER) aclocal.m4 configure.in def2exp.rexx
+	zip rxtrans$(VER) doc/*.html doc/*.png doc/*.ico
+	zip rxtrans$(VER) *.spec
+	zip rxtrans$(VER) rexxtrans-config.in
+	zip rxtrans$(VER) common/accommon.m4
+
+dist:
+	(cd $(srcdir)/..; tar cvf - \
+	$(PACKAGE_DIR)/README $(PACKAGE_DIR)/INSTALL $(PACKAGE_DIR)/TODO $(PACKAGE_DIR)/COPYING-LIB $(PACKAGE_DIR)/HISTORY  \
+	$(DISTCFILES) $(DISTHEADERS) \
+	$(PACKAGE_DIR)/Makefile.in $(PACKAGE_DIR)/configure $(PACKAGE_DIR)/config.h.in \
+	$(PACKAGE_DIR)/makefile.* $(PACKAGE_DIR)/*.def $(PACKAGE_DIR)/*.ico $(PACKAGE_DIR)/*.rc \
+	$(PACKAGE_DIR)/config.guess $(PACKAGE_DIR)/config.sub $(PACKAGE_DIR)/install-sh \
+	$(PACKAGE_DIR)/aclocal.m4 $(PACKAGE_DIR)/configure.in $(PACKAGE_DIR)/def2exp.rexx \
+	$(PACKAGE_DIR)/doc/*.html $(PACKAGE_DIR)/doc/*.png $(PACKAGE_DIR)/doc/*.ico \
+	$(PACKAGE_DIR)/$(PACKAGE_DIR).spec \
+	$(PACKAGE_DIR)/rexxtrans-config.in \
+	$(PACKAGE_DIR)/common/accommon.m4 \
+	| gzip > $(PACKAGE_DIR).tar.gz)
+
+install: $(BASE_INSTALL) $(OTHER_INSTALLS)
+
+installbase: all
+	$(INSTALL) -m 755 -d $(libdir)
+	$(INSTALL) -m 755 -d $(bindir)
+	$(INSTALL) -m 755 -d $(includedir)
+	$(INSTALL) -m 744 -c $(srcdir)/rexxtrans.h $(includedir)/rexxtrans.h
+	$(INSTALL) -m 755 -c ./rexxtrans-config $(bindir)/rexxtrans-config
+
+installlib: 
+	$(INSTALL) -m 755 -c ./$(SHLPRE)$(PACKAGE_NAME)$(SHLPST) $(libdir)/$(SHLPRE)$(PACKAGE_NAME)$(SHLPST)
+
+installabilib: installlib
+	-$(INSTALL) -m 755 -c ./$(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI) $(libdir)/$(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI)
+	-rm -f $(libdir)/$(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI_MAJOR)
+	-(cd $(libdir);$(LN_S) $(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI) $(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI_MAJOR) )
+	-rm -f $(libdir)/$(SHLPRE)$(PACKAGE_NAME)$(SHLPST)
+	-(cd $(libdir);$(LN_S) $(SHLPRE)$(PACKAGE_NAME)$(SHLPST).$(ABI) $(SHLPRE)$(PACKAGE_NAME)$(SHLPST) )
+
+cygwininstall: all
+	$(INSTALL) -m 755 -d $(libdir)
+	$(INSTALL) -m 755 -d $(bindir)
+	$(INSTALL) -m 755 -d $(includedir)
+	$(INSTALL) -m 744 -c $(srcdir)/rexxtrans.h $(includedir)/rexxtrans.h
+	$(INSTALL) -m 755 -c ./rexxtrans-config $(bindir)/rexxtrans-config
+	$(INSTALL) -m 755 -c ./$(LIBPRE)$(PACKAGE_NAME)$(LIBPST) $(libdir)/$(LIBPRE)$(PACKAGE_NAME)$(LIBPST)
+	$(INSTALL) -m 755 -c ./$(SHLPRE)$(PACKAGE_NAME)$(SHLPST) $(bindir)/$(SHLPRE)$(PACKAGE_NAME)$(SHLPST)
+
+beosinstall: all
+	$(INSTALL) -m 755 -d /boot/home/config/lib
+	$(INSTALL) -m 755 -d /boot/home/config/bin
+	$(INSTALL) -m 755 -d /boot/home/config/headers
+	$(INSTALL) -m 744 -c $(srcdir)/rexxtrans.h /boot/home/config/headers/rexxtrans.h
+	$(INSTALL) -m 755 -c ./$(SHLPRE)$(PACKAGE_NAME).$(SHLPST) /boot/home/config/lib/$(SHLPRE)$(PACKAGE_NAME).$(SHLPST)
+	$(INSTALL) -m 755 -c ./rexxtrans-config /boot/home/config/bin/rexxtrans-config
+
+clean:
+	rm -f $(JUNK)
+
+binary: $(BASE_BINARY)
+
+binarybase: all
+	-rm -fr ./tmpdir
+	-mkdir -p ./tmpdir/bin
+	-mkdir -p ./tmpdir/lib
+	-mkdir -p ./tmpdir/include
+	-mkdir -p ./tmpdir/doc/rexxtrans
+	rexx$(EXE) $(srcdir)/makebinary.rexx -s$(srcdir) -d./tmpdir -u$(CAN_USE_ABI) -a$(ABI_MINOR) -A$(ABI_MAJOR) -p$(RXSHLPRE) -P$(SHLPST) -S$(SHLPST) -l$(LIBPRE) -L$(LIBPST)
+	(cd ./tmpdir; \
+	tar cvf - * | gzip > ../RexxTrans-$(VER_DOT)-$(target).tgz )
+
+cygwinbinary: all
+	-rm -fr ./tmpdir
+	-mkdir -p ./tmpdir/usr/bin
+	-mkdir -p ./tmpdir/usr/lib
+	-mkdir -p ./tmpdir/usr/include
+	-mkdir -p ./tmpdir/usr/doc/rexxtrans
+	rexx$(EXE) $(srcdir)/makebinary.rexx -s$(srcdir) -d./tmpdir/usr -u$(CAN_USE_ABI) -a$(ABI_MINOR) -A$(ABI_MAJOR) -p$(RXSHLPRE) -P$(SHLPST) -S$(SHLPST) -l$(LIBPRE) -L$(LIBPST)
+	(cd ./tmpdir; \
+	tar cvf - usr | gzip > ../RexxTrans-$(VER_DOT)-$(target).tgz )
+
+beosbinary: all
+	-rm -fr ./tmpdir
+	-mkdir -p ./tmpdir/lib
+	-mkdir -p ./tmpdir/headers
+	rexx$(EXE) $(srcdir)/makebinary.rexx -s$(srcdir) -d./tmpdir -u$(CAN_USE_ABI) -a$(ABI_MINOR) -A$(ABI_MAJOR) -p$(RXSHLPRE) -P$(SHLPST) -S$(SHLPST) -l$(LIBPRE) -L$(LIBPST)
+	(cd ./tmpdir; \
+	zip -r RexxTrans-$(VER_DOT)-$(target).zip * )
+
+rpm: dist
+	rpm -ta $(srcdir)/../RexxTrans-$(VER_DOT).tar.gz
+#
+# End of makefile
+#

@@ -1,0 +1,255 @@
+dnl Process this file with autoconf to produce a configure script.
+AC_INIT(rexxtrans.c)
+AC_PREFIX_DEFAULT(/usr)
+
+MH_PACKAGE="Rexx/Trans"
+VER="16"
+VER_DOT="1.6"
+VER_DATE="10-Dec-2002"
+AC_SUBST(VER)
+AC_SUBST(VER_DOT)
+AC_SUBST(VER_DATE)
+
+dnl ---------------------- check for C compiler -----------------
+dnl Checks for one of the C compilers below - change if yours not there.
+CC_LIST="gcc acc cc c89"
+MH_PROG_CC
+
+AC_CONFIG_HEADER(config.h)
+AC_ISC_POSIX
+
+dnl Checks for system first
+AC_CANONICAL_SYSTEM
+AC_PROG_GCC_TRADITIONAL
+
+on_qnx=no
+on_beos=no
+case "$target" in
+	*hp-hpux1*)
+		SYS_DEFS="-D_HPUX_SOURCE"
+		if test "$ac_cv_prog_CC" != "gcc"; then
+			if test "$enable_hpux_portable" = yes; then
+				SYS_DEFS="${SYS_DEFS} +DAportable"
+			fi
+		fi
+		;;
+	*hp-hpux*) 
+		SYS_DEFS="-D_HPUX_SOURCE"
+		;;
+	*ibm-aix*)
+		SYS_DEFS="-D_ALL_SOURCE"
+		;;
+	*dec-osf4*)
+		AC_DEFINE(HAVE_BROKEN_SYS_ACL_H)
+		;;
+	*dec-osf*)
+		;;
+	*sequent-dynix*)
+		;;
+	*solaris*)
+		;;
+	sparc*sunos*)
+		;;
+	*linux*)
+		;;
+	*qnx*)
+		on_qnx=yes
+		SYS_DEFS="-Q"
+		;;
+	*beos*)
+		on_beos=yes
+		;;
+esac
+AC_SUBST(SYS_DEFS)
+
+dnl ---------------------- check for 'dist' argument -----------------
+dnl allow --with-dist
+distonly=no
+AC_ARG_WITH(dist,
+	[  --with-dist             build for distribition only],
+	[distonly=yes],
+)
+
+dnl --------------------- Check for other programs. ---------------
+AC_PROG_LN_S
+AC_PROG_MAKE_SET
+
+MH_LIBS_TO_CHECK="dld m dl s socket nls"
+MH_CHECK_LIB(${MH_LIBS_TO_CHECK})
+AC_SUBST(MH_EXTRA_LIBS)
+
+dnl -------------------- Checks for header files. -----------------
+AC_HEADER_STDC
+AC_CHECK_HEADERS( \
+	sys/types.h \
+	sys/stat.h \
+	unistd.h \
+	memory.h \
+	errno.h \
+	stdlib.h \
+	string.h \
+	stdarg.h \
+	dl.h \
+	)
+
+MH_HAVE_PROTO
+
+dnl Checks for typedefs, structures, and compiler characteristics.
+AC_C_CONST
+AC_TYPE_SIZE_T
+AC_HEADER_TIME
+AC_STRUCT_TM
+MH_CHECK_CC_O
+
+dnl Checks for library functions.
+AC_FUNC_MEMCMP
+AC_CHECK_FUNCS(strerror)
+
+dnl --------------- allow --enable-debug to compile in debug mode --------
+AC_ARG_ENABLE(debug,
+	[  --enable-debug          turn on debugging],
+	[with_debug=$enableval],
+	[with_debug=no],
+)
+cflags_g="`echo $CFLAGS | grep -c '\-g'`"
+cflags_O="`echo $CFLAGS | grep -c '\-O'`"
+
+DEBUG=""
+if test "$with_debug" = yes; then
+	DEBUG="-g"
+	if test "$cflags_g" = "0"; then
+		CFLAGS="${CFLAGS} -g"
+	fi
+	if test "$cflags_O" != "0"; then
+		CFLAGS="`echo ${CFLAGS} | sed -e s/-O.//`"
+	fi
+else
+	if test "$cflags_O" = "0"; then
+		CFLAGS="${CFLAGS} -O"
+	fi
+	if test "$cflags_g" != "0"; then
+		CFLAGS="`echo ${CFLAGS} | sed -e s/-g//`"
+	fi
+fi
+if test "$on_beos" = yes; then
+	if test "$with_debug" = yes; then
+		CFLAGS="${CFLAGS} -Wall"
+	else
+		CFLAGS="-O2 -Wall"
+	fi
+fi
+AC_SUBST(DEBUG)
+
+dnl --------------- allow --enable-purify to enable linking with Purify
+AC_ARG_ENABLE(purify,
+	[  --enable-purify         link with Purify (TM)],
+	[with_purify=$enableval],
+	[with_purify=no],
+)
+if test "$with_purify" = yes; then
+	PURIFY="purify"
+else
+	PURIFY=""
+fi
+AC_SUBST(PURIFY)
+
+dnl --------------- allow --with-dlfcnincdir to enable compiling with dlfcn.h on platforms that don't provide dl*() functions natively
+AC_ARG_WITH(dlfcnincdir,
+        [  --with-dlfcnincdir      location of dlfcn.h],
+        [with_dlfcnincdir=$withval],
+        [with_dlfcnincdir=no],
+)
+if test "$with_dlfcnincdir" = no; then
+        DLFCNINCDIR=""
+        AC_CHECK_HEADERS( dlfcn.h )
+else
+        if test -f "$with_dlfcnincdir/dlfcn.h"; then
+           DLFCNINCDIR="-I$with_dlfcnincdir"
+           HAVE_DLFCN_H="1"
+           AC_DEFINE(HAVE_DLFCN_H)
+        else
+           AC_MSG_ERROR(dlfcn.h not found in \"$with_dlfcnincdir\" as specified in --with-dlfcnincdir switch; cannot continue)
+        fi
+fi
+AC_SUBST(DLFCNINCDIR)
+
+dnl --------------- allow --with-dlfcnlibdir to enable compiling with dlfcn.h on platforms that don't provide dl*() functions natively
+AC_REQUIRE([MH_SHLPST])
+AC_ARG_WITH(dlfcnlibdir,
+        [  --with-dlfcnlibdir      location of libdl.a(AIX) libdl.dylib(MacOSX)],
+        [with_dlfcnlibdir=$withval],
+        [with_dlfcnlibdir=no],
+)
+if test "$with_dlfcnlibdir" = no; then
+        DLFCNLIBDIR=""
+else
+        if test -f "$with_dlfcnlibdir/libdl$SHLPST"; then
+           DLFCNLIBDIR="-L$with_dlfcnlibdir -ldl"
+        else
+           AC_MSG_ERROR(libdl$SHLPST not found in \"$with_dlfcnlibdir\" as specified in --with-dlfcnlibdir switch; cannot continue)
+        fi
+fi
+AC_SUBST(DLFCNLIBDIR)
+
+dnl --------------- Force definition of pre-compiler macro UNIX ----------
+AC_DEFINE(UNIX)
+
+with_rexx="rexxtrans"
+
+dnl --------------- Check how to make shared libraries -------------------
+dnl --------------- ensure this is done after the test for DLFCN ---------
+USE_ABI=yes
+MH_SHARED_LIBRARY(rexxtrans)
+
+dnl --------------- Check if underscore is needed in loadable modules ----
+dnl MH_CHECK_LEADING_USCORE must be called after processing --with-dlfcn[inc,lib]dir switches
+MH_CHECK_LEADING_USCORE
+
+thisdir="`pwd`"
+AC_SUBST(thisdir)
+
+dnl -------------- Setup substitutions for rexxtrans-config --------------
+AC_SUBST(prefix)
+AC_SUBST(exec_prefix)
+AC_SUBST(libdir)
+AC_SUBST(includedir)
+MYLDFLAGS="$DEBUG $EEXTRA $LDFLAGS $MH_EXTRA_LIBS"
+AC_SUBST(MYLDFLAGS)
+AC_SUBST(MH_EXTRA_LIBS)
+
+AC_OUTPUT(Makefile rexxtrans-config)
+chmod 755 rexxtrans-config
+if test "$distonly" = yes; then
+	echo
+	echo "$MH_PACKAGE has now been configured for distribution only"
+	rm -f config.h
+else
+	
+	echo
+	echo "$MH_PACKAGE has now been configured with the following options:"
+	echo
+	myopts=""
+	if test "$with_debug" = yes ; then
+		myopts="$myopts DEBUG"
+	fi
+	if test "$with_purify" = yes ; then
+		myopts="$myopts PURIFY"
+	fi
+	if test "$with_trace" = yes ; then
+		myopts="$myopts TRACE"
+	fi
+	if test "$with_hpux_portable" = yes ; then
+		myopts="$myopts HPUX-PORTABLE"
+	fi
+	if test "$exec_prefix" = '${prefix}' ; then
+		macro_dir="$prefix"
+	else
+		macro_dir="$exec_prefix"
+	fi
+	echo "                     Build options: $myopts"
+	echo "   libraries will be installed in: $macro_dir/lib"
+	echo
+	echo "To build the $MH_PACKAGE shared loadable library, type 'make'"
+	echo "To install $MH_PACKAGE in the above directory, type 'make install'"
+	echo
+fi

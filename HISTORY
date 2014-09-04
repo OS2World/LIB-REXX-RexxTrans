@@ -1,0 +1,28 @@
+Version 1.6 10-Dec-2002
+- Add Object Rexx specific APIs; RexxWaitForTermination() and RexxDidRexxTerminate()
+- Add support for Reginald
+
+Version 1.5 18 Aug 2002
+- OS/2 port really works now that the DLL name under OS/2 has been truncated
+  to DOS 8.3 file name format. This limit of 8 character file names under
+  OS/2 is deliberate, believe it or not!
+
+Version 1.4 22 Nov 2001
+- Changed method of initialisation for Win32 port.  A change in Windows 2k 
+  and XP caused Rexx/Trans to not load Object Rexx or WinREXX DLLs properly.
+  Thanks to Jan Engehausen of IBM for suggesting the fix for this.
+- Added support for queue and macro API calls.
+
+Version 1.3 24 Jul 2001
+- Changed configuration script to use common macros
+- Fixed configuration script to build on more platforms
+- Preliminary support for REXX/imc - still doesn't work :-(
+
+Version 1.2 18 Nov 2000
+- Added support for BeOS
+- Removed use of rexxtrans.ini file from Win32 platform. All platforms
+  now use environment variables to specify an explicit interpreter or
+  turn on tracing of the library.
+- Unix port done
+- Linux RPM
+- OS/2 Support

@@ -1,0 +1,82 @@
+#
+# NMAKE-compatible MAKE file for building RexxTrans with VAC 3.0
+#
+# will generate:
+#
+#      rexxtrans.dll
+#      rexxtrans.lib
+# 
+# Usage: nmake [DEBUG=1] 
+#
+
+PROJ = rexxtrans
+VER = 16
+VERDOT = 1.6
+VERDATE = 10-Dec-2002
+
+SRCDIR = $(REXXTRANS_SRCDIR)
+
+#---------------------------------------------------------------------
+# You should not have to change anything below here...
+#---------------------------------------------------------------------
+
+
+EXTRALINK = #/NOE
+CCLIBS = #user32.lib
+DISTDIR=$(SRCDIR)\dist
+
+comcopts = /Q+ /Se /Ge- /Gd- /Re- /Ms /Gm+ /W3 /c -DOS2 -DHAVE_PROTO -I$(SRCDIR) -DREXXTRANS_VERSION=\"$(VERDOT)\" -DREXXTRANS_DATE=\"$(VERDATE)\"
+comlopts = /NOLOGO /PMTYPE:VIO $(EXTRALINK)
+
+!ifdef DEBUG
+copts  = $(comcopts) /O- /Ti+
+lopts  = $(comlopts) /DEBUG
+!else
+copts  = $(comcopts) /O+ /Ti-
+lopts  = $(comlopts) /EXEPACK /PACKCODE /PACKDATA
+!endif
+
+cflagsdll = $(copts) /DDYNAMIC
+cflagsexe = $(copts)
+lflagsdll = $(lopts) /DLL
+lflagsexe = $(lopts) 
+
+objsdll = rexxtrans.obj
+
+ccdll = icc $(cflagsdll) $(listopt)
+
+
+all: $(PROJ).dll dist
+
+#
+# These modules are the package-specific modules; both for DLL and EXE
+#
+
+rexxtrans.obj: $(SRCDIR)\rexxtrans.c
+	$(ccdll) /Forexxtrans.obj $(SRCDIR)\rexxtrans.c
+
+
+#
+# Rules for resources
+#
+dll_res.res: $(SRCDIR)\$(PROJ)os2.rc
+	-copy $(SRCDIR)\$(PROJ)os2.ico .
+	rc /r dll_res.res $(SRCDIR)\$(PROJ)os2.rc
+
+#
+# Rules for executables and DLLs
+#
+$(PROJ).dll: $(objsdll)
+	ilink /NOFREE $(lflagsdll) $(objsdll),$(PROJ).dll,,,$(SRCDIR)\$(PROJ)os2.def
+	implib $(PROJ).lib $(PROJ).dll
+
+#
+# Rules for distribution
+#
+dist: $(DISTDIR)\$(INT) $(DISTDIR)\$(INT)\$(PROJ).exe $(DISTDIR)\$(INT)\$(PROJ).dll
+
+$(DISTDIR):
+	-mkdir $(DISTDIR)
+
+$(DISTDIR)\$(PROJ).dll: $(PROJ).dll
+	copy $(PROJ).dll $(DISTDIR)

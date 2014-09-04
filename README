@@ -1,0 +1,82 @@
+                                  Rexx/Trans
+                                  ==========
+Rexx/Trans is a dynamic link library or shared library that translates Rexx
+API calls from an external function package or application into API calls
+specific to a particular Rexx interpreter.
+
+Rexx/Trans is only of interest to people building and distributing applications 
+that use Rexx external function packages.
+
+What's its purpose ?
+==================
+For those of you who have developed or are developing Rexx external function packages
+or applications that use Rexx, you only need to build your code against one Rexx 
+API library and distribute one set of executables per platform.
+Your application will work with any supported Rexx interpreter on that platform.
+
+How do I use it ?
+===============
+Simply #include <rexxtrans.h>; instead of <rexxsaa.h>, or whatever your Rexx header 
+file is, and then link your application or external function package against the 
+Rexx/Trans library.
+
+How does it work ?
+================
+When you link your Rexx application against an import library (or shared library) 
+supplied with the Rexx interpreter, details about the Rexx API calls are embedded 
+in your application or external function package. These details consist of the API 
+function name, the name of the dynamic or shared library and the position of the API 
+function in the library.
+To enable multiple Rexx interpreters to work on the one machine, all suppliers of 
+Rexx interpreters call their Rexx interpreter's dyanamic or shared libraries by 
+different names. it is this unique library name that gets embedded in your application.  
+This means that when you link your application against, say Object Rexx, then it will
+only run with the shared libraries supplied with Object Rexx.
+
+With Rexx/Trans, your application contains references to the Rexx/Trans library. 
+On the first call to a Rexx API function, Rexx/Trans determines which Rexx interpreter 
+to use (more on this later), and loads all entry points for the Rexx API functions 
+into memory from the appropriate dynamic or shared library.
+When you call a Rexx API function, such as RexxRegisterFunctionExe, this function 
+in the Rexx/Trans dynamic or shared library looks up the table in memory containing 
+the entry points for the Rexx interpreter and calls this entry point using the 
+parameters passed.
+
+What platforms is it available for ?
+==================================
+Currently only available for Windows NT/2000/Me/95/98/2000 and Unix, but it is intended 
+that a version be available for OS/2.
+
+What Rexx interpreters does it work with ?
+========================================
+Rexx/Trans works with the following Rexx interpreters:
+
+Win32
+-----
+  Regina <http://regina-rexx.sourceforge.net/>
+  IBM Object Rexx <http://www.software.ibm.com/ad/obj-rexx/>
+  Quercus Systems Personal Rexx <http://www.quercus-sys.com/>
+  Enterprise Rexx <http://www.WinREXX.com/>
+
+Unix
+----
+  Regina <http://regina-rexx.sourceforge.net/>
+  IBM Object Rexx <http://www.software.ibm.com/ad/obj-rexx/>
+
+What Rexx interpreters does it NOT work with ?
+============================================
+Rexx/Trans does not work with the following interpreters, because they are "binary
+incompatible". ie various internal values as defined in the SAA API header files
+differ to those in <rexxtrans.h>
+
+  REXX/imc <http://www.comlab.ox.ac.uk/oucl/users/ian.collier/Rexx/rexximc.html>
+  BREXX
+
+What Rexx interpreters might it work with ?
+===========================================
+Rexx/Trans may work with the following interpreters, but I don't have access to them
+to test.
+
+  uni-REXX
+  S/REXX
+

@@ -1,0 +1,88 @@
+#
+# NMAKE-compatible MAKE file for building RexxTrans with VC++
+#
+# will generate:
+#
+#      rexxtrans.dll
+#      rexxtrans.lib
+# 
+# Usage: nmake [DEBUG=1] 
+#
+
+PROJ = rexxtrans
+VER = 16
+VERDOT = 1.6
+VERDATE = 10-Dec-2002
+
+SRCDIR = $(REXXTRANS_SRCDIR)
+
+#---------------------------------------------------------------------
+# You should not have to change anything below here...
+#---------------------------------------------------------------------
+
+
+EXTRALINK =
+CCLIBS = user32.lib
+DISTDIR=$(SRCDIR)\dist
+
+comcopts = -nologo -W3 -c -DWIN32 -DHAVE_PROTO -I$(SRCDIR) -I$(SRCDIR)\common -DREXXTRANS_VERSION=\"$(VERDOT)\" -DREXXTRANS_DATE=\"$(VERDATE)\"
+comlopts = -nologo -machine:I386 $(EXTRALINK)
+
+!ifdef DEBUG
+copts  = $(comcopts) -Od -Z7 -FR
+lopts  = $(comlopts) -debug
+!else
+copts  = $(comcopts) -Ox
+lopts  = $(comlopts) -release
+!endif
+
+cflagsdll = $(copts) /DDYNAMIC
+cflagsexe = $(copts)
+lflagsdll = $(lopts) -dll -implib:$(*B).lib
+lflagsexe = $(lopts) 
+
+objsdll = rexxtrans.obj dll_res.obj
+
+ccdll = cl $(cflagsdll) $(listopt)
+
+
+all: $(PROJ).dll
+
+#
+# These modules are the package-specific modules; both for DLL and EXE
+#
+
+rexxtrans.obj: $(SRCDIR)\rexxtrans.c
+	$(ccdll) /Forexxtrans.obj $(SRCDIR)\rexxtrans.c
+
+
+#
+# Rules for resources
+#
+dll_res.obj dll_res.res: $(SRCDIR)\$(PROJ)w32.rc
+	-copy $(SRCDIR)\$(PROJ)w32.ico .
+	rc /r /fodll_res.res /DDYNAMIC /D$(INT) /I$(SRCDIR) $(SRCDIR)\$(PROJ)w32.rc
+	cvtres /MACHINE:IX86 /NOLOGO /OUT:dll_res.obj dll_res.res
+
+#
+# Rules for executables and DLLs
+#
+$(PROJ).dll: $(objsdll)
+	link $(lflagsdll) $(objsdll) -base:0x03000000 -out:$(PROJ).dll $(CCLIBS) -def:$(SRCDIR)\$(PROJ)w32.def
+
+#
+# Rules for distribution
+#
+dist: $(DISTDIR)
+	copy $(PROJ).dll $(DISTDIR)
+	copy $(PROJ).lib $(DISTDIR)
+	copy $(SRCDIR)\rexxtrans.h $(DISTDIR)
+	copy $(SRCDIR)\COPYING-LIB $(DISTDIR)
+	copy $(SRCDIR)\HISTORY $(DISTDIR)
+	copy $(SRCDIR)\INSTALL $(DISTDIR)
+	copy $(SRCDIR)\README $(DISTDIR)
+	cd $(DISTDIR)
+	zip rxtrans$(VER)w32 $(PROJ).dll rexxtrans.h COPYING-LIB HISTORY INSTALL README
+
+$(DISTDIR):
+	-mkdir $(DISTDIR)

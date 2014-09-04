@@ -5,7 +5,7 @@ Rexx/Trans is a dynamic link library or shared library that translates Rexx API 
 
 LICENSE
 ===============
-* 
+* GNU LGPL V2
 
 COMPILE TOOLS
 ===============

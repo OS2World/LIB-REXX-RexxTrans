@@ -1,0 +1,42 @@
+;
+; rexxtransos2.def
+;
+LIBRARY REXXTRAN INITINSTANCE
+DESCRIPTION 'Rexx/Trans'
+DATA    MULTIPLE NONSHARED
+
+STACKSIZE   40960
+HEAPSIZE    40960
+
+EXPORTS
+        RexxAddMacro
+        RexxAddQueue
+        RexxAllocateMemory
+        RexxClearMacroSpace
+        RexxCreateQueue
+        RexxDeleteQueue
+        RexxDeregisterExit
+        RexxDeregisterFunction
+        RexxDeregisterSubcom
+        RexxDropMacro
+        RexxFreeMemory
+        RexxLoadMacroSpace
+        RexxPullQueue
+        RexxQueryExit
+        RexxQueryFunction
+        RexxQueryMacro
+        RexxQueryQueue
+        RexxQuerySubcom
+        RexxRegisterExitDll
+        RexxRegisterExitExe
+        RexxRegisterFunctionDll
+        RexxRegisterFunctionExe
+        RexxRegisterSubcomDll
+        RexxRegisterSubcomExe
+        RexxReorderMacro
+        RexxSaveMacroSpace
+        RexxSetHalt
+        RexxStart
+        RexxVariablePool
+        RexxWaitForTermination
+        RexxDidRexxTerminate

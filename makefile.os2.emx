@@ -1,0 +1,66 @@
+#
+# MAKE-compatible MAKE file for building RexxTrans with emx
+#
+# will generate:
+#
+#      rexxtran.dll
+#      rexxtrans.lib
+#      rexxtrans.a
+# 
+# Usage: make [DEBUG=1] 
+#
+
+PROJ = rexxtran
+VER = 16
+VERDOT = 1.6
+VERDATE = 10-Dec-2002
+
+SRCDIR = $(REXXTRANS_SRCDIR)
+
+#---------------------------------------------------------------------
+# You should not have to change anything below here...
+#---------------------------------------------------------------------
+
+
+EXTRALINK =
+DISTDIR=$(SRCDIR)\dist
+
+comcopts = -Wall -c -DOS2 -DHAVE_PROTO -I$(SRCDIR) -DREXXTRANS_VERSION=\"$(VERDOT)\" -DREXXTRANS_DATE=\"$(VERDATE)\"
+comlopts = 
+
+ifeq ($(DEBUG),Y)
+	copts = $(comcopts) -g 
+	lopts = $(comlopts) -g
+else
+	copts = $(comcopts) -O3
+	lopts = $(comlopts) -O3
+endif
+
+cflagsdll = $(copts) -DDYNAMIC -Zdll -Zcrtdll -Zomf #-Zmtd
+cflagsexe = $(copts)
+lflagsdll = $(lopts) -Zdll -Zcrtdll -Zomf -lwrap -s #-Zmt
+lflagsexe = $(lopts) 
+
+objsdll = rexxtran.obj
+
+ccdll = gcc $(cflagsdll) $(listopt)
+
+
+all: $(PROJ).dll
+
+#
+# These modules are the package-specific modules; both for DLL and EXE
+#
+
+rexxtran.obj: $(SRCDIR)/rexxtrans.c
+	$(ccdll) -orexxtran.obj $(SRCDIR)/rexxtrans.c
+
+
+#
+# Rules for executables and DLLs
+#
+$(PROJ).dll: $(objsdll)
+	gcc $(lflagsdll) $(objsdll) -o $(PROJ).dll $(SRCDIR)/$(PROJ)sos2.def
+	emximp -o $(PROJ)s.lib $(SRCDIR)/$(PROJ)sos2.def
+	emximp -o $(PROJ)s.a $(PROJ)s.lib
+
